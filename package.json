@@ -80,6 +80,10 @@
     "format:check": "prettier --check .",
     "lint": "eslint --cache .",
     "prepare": "pnpm build",
+    "release": "gh workflow run Release --ref main -f release_type=patch",
+    "release:patch": "gh workflow run Release --ref main -f release_type=patch",
+    "release:minor": "gh workflow run Release --ref main -f release_type=minor",
+    "release:major": "gh workflow run Release --ref main -f release_type=major",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

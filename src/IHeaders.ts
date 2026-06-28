@@ -4,8 +4,7 @@ import type { BodyType, KeyValue } from './types.js';
  * Result of building request headers from user input.
  */
 export type BuildHeadersResult =
-  | { ok: true; headers: Record<string, string> }
-  | { ok: false; error: string };
+  { ok: true; headers: Record<string, string> } | { ok: false; error: string };
 
 /**
  * Result of merging a cookie jar header into a request header map.

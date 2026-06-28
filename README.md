@@ -12,11 +12,11 @@
 
 ## Documentation
 
-| Topic | Link |
-| --- | --- |
-| Getting started | [Introduction](https://harborclient.github.io/http/) |
-| Installation | [Installation](https://harborclient.github.io/http/installation) |
-| Usage | [Usage](https://harborclient.github.io/http/usage) |
+| Topic           | Link                                                             |
+| --------------- | ---------------------------------------------------------------- |
+| Getting started | [Introduction](https://harborclient.github.io/http/)             |
+| Installation    | [Installation](https://harborclient.github.io/http/installation) |
+| Usage           | [Usage](https://harborclient.github.io/http/usage)               |
 
 Canonical docs live in [`docs/`](./docs/). Edit those pages directly, then run `pnpm docs:build:nav` to refresh the VitePress sidebar.
 
