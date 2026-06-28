@@ -1,0 +1,99 @@
+{
+  "name": "@harborclient/http",
+  "version": "0.1.0",
+  "description": "HTTP utilities for HarborClient.",
+  "keywords": [
+    "harborclient",
+    "http",
+    "typescript"
+  ],
+  "homepage": "https://github.com/harborclient/http",
+  "bugs": {
+    "url": "https://github.com/harborclient/http/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harborclient/http.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "HarborClient",
+    "email": "contact@harborclient.com"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "packageManager": "pnpm@10.17.1",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./formData": {
+      "types": "./dist/formData.d.ts",
+      "import": "./dist/formData.js",
+      "default": "./dist/formData.js"
+    },
+    "./urlencoded": {
+      "types": "./dist/urlencoded.d.ts",
+      "import": "./dist/urlencoded.js",
+      "default": "./dist/urlencoded.js"
+    },
+    "./httpHeaders": {
+      "types": "./dist/httpHeaders.d.ts",
+      "import": "./dist/httpHeaders.js",
+      "default": "./dist/httpHeaders.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js",
+      "default": "./dist/types.js"
+    },
+    "./settings": {
+      "types": "./dist/settings.d.ts",
+      "import": "./dist/settings.js",
+      "default": "./dist/settings.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "undici": "^6.27.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "docs:build": "pnpm docs:build:nav && vitepress build docs",
+    "docs:build:nav": "node scripts/build-docs-nav.mjs && node scripts/assert-docs-slugs.mjs",
+    "docs:preview": "pnpm docs:build && vitepress preview docs",
+    "docs:serve": "pnpm docs:build:nav && concurrently --kill-others --prefixColors=auto -n nav,vp \"node scripts/watch-docs-nav.mjs\" \"vitepress dev docs\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint --cache .",
+    "prepare": "pnpm build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "vitepress": "^1.6.4",
+    "@eslint/js": "^9.39.4",
+    "@types/node": "^26.0.1",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.5",
+    "prettier": "^3.8.4",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.36.0",
+    "vitest": "^4.1.9"
+  }
+}
