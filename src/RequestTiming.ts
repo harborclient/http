@@ -295,7 +295,11 @@ class RequestTimingSession implements IRequestTimingSession {
    * @param targetUrl - Fully resolved URL for this request attempt.
    * @param method - HTTP method used for this request attempt.
    */
-  constructor(private readonly requestStart: number, targetUrl: string, method: HttpMethod) {
+  constructor(
+    private readonly requestStart: number,
+    targetUrl: string,
+    method: HttpMethod
+  ) {
     this.targetOrigin = new URL(targetUrl).origin;
     this.method = method;
     this.subscribe(requestCreateChannel, this.handleCreate);

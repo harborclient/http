@@ -392,8 +392,8 @@ export class Requester implements IRequester {
       ? input.bodyType === 'multipart'
         ? this.body.summarizeFormParts(input.body)
         : input.bodyType === 'urlencoded'
-        ? this.body.buildUrlEncoded(input.body)
-        : input.body
+          ? this.body.buildUrlEncoded(input.body)
+          : input.body
       : '';
     sentRequest.body = sentBody;
 
