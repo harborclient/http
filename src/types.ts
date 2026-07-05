@@ -217,6 +217,40 @@ export interface RedirectHop {
 }
 
 /**
+ * Best-effort timing breakdown for one HTTP request hop.
+ *
+ * Phases are optional because undici only publishes some events for reused
+ * sockets or requests that fail before bytes are written. `connectMs` combines
+ * DNS, TCP, and TLS setup and reflects the proxy connection when a proxy is used.
+ */
+export interface RequestTimingPhases {
+  /**
+   * Time spent waiting before the request starts writing to a socket.
+   */
+  stalledMs?: number;
+
+  /**
+   * Combined DNS, TCP, and TLS connection setup time for new sockets.
+   */
+  connectMs?: number;
+
+  /**
+   * Time spent writing request headers and body to the socket.
+   */
+  requestSentMs?: number;
+
+  /**
+   * Time from finishing the request write until response headers arrive.
+   */
+  waitingMs?: number;
+
+  /**
+   * Time spent reading the response body after response headers arrive.
+   */
+  downloadMs?: number;
+}
+
+/**
  * Result of an HTTP request including timing and size metadata.
  */
 export interface SendResult {
@@ -249,6 +283,11 @@ export interface SendResult {
    * Round-trip time in milliseconds.
    */
   timeMs: number;
+
+  /**
+   * Optional best-effort phase timing for the final request hop.
+   */
+  timing?: RequestTimingPhases;
 
   /**
    * Response body size in bytes.

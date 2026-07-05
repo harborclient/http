@@ -11,6 +11,7 @@ export type { IBody } from './IBody.js';
 export type { IHeaders } from './IHeaders.js';
 export type { IQueryString } from './IQueryString.js';
 export type { IRequester } from './IRequester.js';
+export type { IRequestTiming, IRequestTimingSession } from './IRequestTiming.js';
 export type { IResponseReader } from './IResponseReader.js';
 export type { RequesterDeps } from './Requester.js';
 export type {
@@ -22,6 +23,7 @@ export type {
   ProxyProtocol,
   ProxySettings,
   RedirectHop,
+  RequestTimingPhases,
   SendRequestInput,
   SendResult,
   SentRequest
@@ -30,6 +32,7 @@ export { Body } from './Body.js';
 export { Headers } from './Headers.js';
 export { QueryString } from './QueryString.js';
 export { MAX_REDIRECTS, REDIRECT_STATUSES, Requester } from './Requester.js';
+export { RequestTiming } from './RequestTiming.js';
 export { ResponseReader } from './ResponseReader.js';
 export {
   emptyFormPart,

@@ -1,3 +1,5 @@
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SendRequestInput } from './types.js';
 import { DEFAULT_REQUEST_SETTINGS } from './settings.js';
@@ -208,6 +210,42 @@ describe('Requester', () => {
         bodyType: 'json',
         headers: { 'Content-Type': 'application/json' }
       });
+    });
+
+    it('captures timing phases from a real HTTP request', async () => {
+      const server = createServer((_req, res) => {
+        res.writeHead(200, { 'content-type': 'text/plain' });
+        res.end('ok');
+      });
+
+      await new Promise<void>((resolve) => {
+        server.listen(0, '127.0.0.1', resolve);
+      });
+
+      try {
+        const address = server.address() as AddressInfo;
+        const result = await requester.executeRequest({
+          ...baseInput,
+          url: `http://127.0.0.1:${address.port}/timing`
+        });
+
+        expect(result.error).toBeUndefined();
+        expect(result.body).toBe('ok');
+        expect(result.timing).toBeDefined();
+        expect(result.timing?.stalledMs).toBeGreaterThanOrEqual(0);
+        expect(result.timing?.waitingMs).toBeGreaterThanOrEqual(0);
+        expect(result.timing?.downloadMs).toBeGreaterThanOrEqual(0);
+        if (result.timing?.connectMs != null) {
+          expect(result.timing.connectMs).toBeGreaterThanOrEqual(0);
+        }
+        if (result.timing?.requestSentMs != null) {
+          expect(result.timing.requestSentMs).toBeGreaterThanOrEqual(0);
+        }
+      } finally {
+        await new Promise<void>((resolve, reject) => {
+          server.close((err) => (err ? reject(err) : resolve()));
+        });
+      }
     });
 
     it('returns error result when fetch rejects', async () => {

@@ -4,6 +4,7 @@ import type {
   HttpMethod,
   ProxySettings,
   RedirectHop,
+  RequestTimingPhases,
   SendRequestInput,
   SendResult,
   SentRequest
@@ -14,10 +15,12 @@ import type { IBody } from './IBody.js';
 import type { IHeaders } from './IHeaders.js';
 import type { IQueryString } from './IQueryString.js';
 import type { IRequester } from './IRequester.js';
+import type { IRequestTiming, IRequestTimingSession } from './IRequestTiming.js';
 import type { IResponseReader } from './IResponseReader.js';
 import { Body } from './Body.js';
 import { Headers } from './Headers.js';
 import { QueryString } from './QueryString.js';
+import { RequestTiming } from './RequestTiming.js';
 import { ResponseReader } from './ResponseReader.js';
 
 /** HTTP status codes treated as redirects when following manually. */
@@ -51,6 +54,7 @@ export interface RequesterDeps {
   headers?: IHeaders;
   body?: IBody;
   responseReader?: IResponseReader;
+  timing?: IRequestTiming;
 }
 
 let insecureDispatcher: Agent | undefined;
@@ -177,6 +181,7 @@ export class Requester implements IRequester {
   private readonly headers: IHeaders;
   private readonly body: IBody;
   private readonly responseReader: IResponseReader;
+  private readonly timing: IRequestTiming;
 
   /**
    * Creates a requester with optional collaborators defaulting to the standard implementations.
@@ -188,6 +193,7 @@ export class Requester implements IRequester {
     this.headers = deps.headers ?? new Headers();
     this.body = deps.body ?? new Body();
     this.responseReader = deps.responseReader ?? new ResponseReader();
+    this.timing = deps.timing ?? new RequestTiming();
   }
 
   /**
@@ -250,6 +256,7 @@ export class Requester implements IRequester {
    * @param error - User-facing error message.
    * @param request - Sent request metadata captured before or during the attempt.
    * @param timeMs - Elapsed time in milliseconds.
+   * @param timing - Optional best-effort phase timing captured before the error.
    * @param responseHeaders - Optional response headers when available before failure.
    * @param setCookieHeaders - Optional Set-Cookie headers from the response.
    */
@@ -257,6 +264,7 @@ export class Requester implements IRequester {
     error: string,
     request: SentRequest,
     timeMs: number,
+    timing?: RequestTimingPhases,
     responseHeaders: Record<string, string> = {},
     setCookieHeaders?: string[]
   ): SendResult {
@@ -266,6 +274,7 @@ export class Requester implements IRequester {
       headers: responseHeaders,
       body: '',
       timeMs,
+      ...(timing ? { timing } : {}),
       sizeBytes: 0,
       error,
       setCookieHeaders,
@@ -383,8 +392,8 @@ export class Requester implements IRequester {
       ? input.bodyType === 'multipart'
         ? this.body.summarizeFormParts(input.body)
         : input.bodyType === 'urlencoded'
-          ? this.body.buildUrlEncoded(input.body)
-          : input.body
+        ? this.body.buildUrlEncoded(input.body)
+        : input.body
       : '';
     sentRequest.body = sentBody;
 
@@ -410,6 +419,7 @@ export class Requester implements IRequester {
     const currentBodyType = input.bodyType;
     let currentShouldSendBody = shouldSendBody;
     const redirects: RedirectHop[] = [];
+    let lastTimingSession: IRequestTimingSession | undefined;
 
     try {
       let response: Response | undefined;
@@ -433,13 +443,24 @@ export class Requester implements IRequester {
         );
         if (bodyResult.error) {
           const timeMs = Math.round(performance.now() - start);
-          return this.errorResult(bodyResult.error, sentRequest, timeMs);
+          return this.errorResult(
+            bodyResult.error,
+            sentRequest,
+            timeMs,
+            lastTimingSession?.toPhases(timeMs)
+          );
         }
         if (bodyResult.body !== undefined) {
           init.body = bodyResult.body;
         }
 
-        response = await fetch(currentUrl, init);
+        const timingSession = this.timing.start(start, currentUrl, currentMethod);
+        lastTimingSession = timingSession;
+        try {
+          response = await fetch(currentUrl, init);
+        } finally {
+          timingSession.stop();
+        }
 
         if (
           !settings.followRedirects ||
@@ -469,7 +490,12 @@ export class Requester implements IRequester {
 
         if (redirects.length > MAX_REDIRECTS) {
           const timeMs = Math.round(performance.now() - start);
-          return this.errorResult('Too many redirects', sentRequest, timeMs);
+          return this.errorResult(
+            'Too many redirects',
+            sentRequest,
+            timeMs,
+            lastTimingSession?.toPhases(timeMs)
+          );
         }
 
         const methodRef = { value: currentMethod };
@@ -486,7 +512,12 @@ export class Requester implements IRequester {
 
       if (!response) {
         const timeMs = Math.round(performance.now() - start);
-        return this.errorResult('No response received', sentRequest, timeMs);
+        return this.errorResult(
+          'No response received',
+          sentRequest,
+          timeMs,
+          lastTimingSession?.toPhases(timeMs)
+        );
       }
 
       const setCookieHeaders =
@@ -500,15 +531,18 @@ export class Requester implements IRequester {
       });
 
       if ('error' in readResult) {
+        const timing = lastTimingSession?.toPhases(timeMs);
         return this.errorResult(
           readResult.error,
           sentRequest,
           timeMs,
+          timing,
           responseHeaders,
           setCookieHeaders
         );
       }
 
+      const timing = lastTimingSession?.toPhases(timeMs);
       return {
         status: response.status,
         statusText: response.statusText,
@@ -516,6 +550,7 @@ export class Requester implements IRequester {
         body: readResult.body,
         ...(readResult.bodyBase64 ? { bodyBase64: readResult.bodyBase64 } : {}),
         timeMs,
+        ...(timing ? { timing } : {}),
         sizeBytes: readResult.sizeBytes,
         setCookieHeaders,
         request: sentRequest,
@@ -526,7 +561,8 @@ export class Requester implements IRequester {
       return this.errorResult(
         this.mapFetchError(err, settings.requestTimeoutMs),
         sentRequest,
-        timeMs
+        timeMs,
+        lastTimingSession?.toPhases(timeMs)
       );
     }
   }
