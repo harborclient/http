@@ -3,7 +3,6 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { describe, expect, it } from 'vitest';
 import { serializeFormParts } from './formData.js';
-import { serializeUrlEncodedParts } from './urlencoded.js';
 import { Body } from './Body.js';
 
 describe('Body', () => {
