@@ -20,8 +20,14 @@ export interface IHeaders {
    *
    * @param headers - User-defined headers.
    * @param bodyType - Body type used to infer Content-Type when absent.
+   * @param options - When `preserveMultipartContentType` is true, keep a user Content-Type
+   *   for multipart (used with raw body overrides that own the boundary).
    */
-  build(headers: KeyValue[], bodyType: BodyType): BuildHeadersResult;
+  build(
+    headers: KeyValue[],
+    bodyType: BodyType,
+    options?: { preserveMultipartContentType?: boolean }
+  ): BuildHeadersResult;
 
   /**
    * Validates and merges a cookie jar header when no Cookie header is already present.

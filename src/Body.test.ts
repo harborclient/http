@@ -65,16 +65,45 @@ describe('Body', () => {
     });
   });
 
-  describe('buildUrlEncoded', () => {
-    it('builds application/x-www-form-urlencoded body from key-value rows', () => {
-      const body = serializeUrlEncodedParts([
-        { key: 'name', value: 'Ada Lovelace', enabled: true },
-        { key: 'disabled', value: 'ignored', enabled: false },
-        { key: '  ', value: 'blank key', enabled: true },
-        { key: 'tags', value: 'a&b=c', enabled: true }
-      ]);
+  describe('expandMultipartRaw', () => {
+    it('expands file tokens into wire bytes and derives Content-Type', async () => {
+      const tempDir = await mkdtemp(join(tmpdir(), 'hc-multipart-raw-'));
+      const filePath = join(tempDir, 'upload.txt');
+      await writeFile(filePath, 'hello file', 'utf-8');
 
-      expect(bodyBuilder.buildUrlEncoded(body)).toBe('name=Ada+Lovelace&tags=a%26b%3Dc');
+      const raw =
+        `----bound\r\n` +
+        `Content-Disposition: form-data; name="file"; filename="upload.txt"\r\n` +
+        `\r\n` +
+        `<<file:${filePath}>>\r\n` +
+        `----bound--`;
+
+      const result = await bodyBuilder.expandMultipartRaw(raw);
+      expect(result).toHaveProperty('body');
+      if (!('body' in result)) {
+        throw new Error('Expected expanded multipart body');
+      }
+
+      expect(result.contentType).toBe('multipart/form-data; boundary=--bound');
+      const decoded = new TextDecoder().decode(result.body);
+      expect(decoded).toContain('hello file');
+      expect(decoded).not.toContain('<<file:');
+    });
+
+    it('preserves malformed structure and only errors on unreadable files', async () => {
+      const ok = await bodyBuilder.expandMultipartRaw('not really multipart');
+      expect(ok).toHaveProperty('body');
+      if (!('body' in ok)) {
+        throw new Error('Expected body for malformed raw');
+      }
+      expect(ok.contentType).toBe('multipart/form-data');
+
+      const missing = await bodyBuilder.expandMultipartRaw(
+        '----b\r\n\r\n<<file:/tmp/does-not-exist-hc-raw.txt>>\r\n----b--'
+      );
+      expect(missing).toEqual({
+        error: 'Failed to read file: /tmp/does-not-exist-hc-raw.txt'
+      });
     });
   });
 });

@@ -143,6 +143,15 @@ export interface SendRequestInput {
   bodyType: BodyType;
 
   /**
+   * Optional verbatim body override from the Raw body editor.
+   *
+   * When set (including the empty string), this text is sent instead of encoding
+   * {@link body} as structured multipart/urlencoded JSON. For multipart, file
+   * tokens of the form `<<file:/abs/path>>` are expanded to file bytes on send.
+   */
+  bodyRaw?: string;
+
+  /**
    * Saved collection request id when the send originated from a saved request tab.
    */
   sourceRequestId?: number;

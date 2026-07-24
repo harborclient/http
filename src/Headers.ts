@@ -13,15 +13,26 @@ export class Headers implements IHeaders {
    *
    * @param headers - User-defined headers.
    * @param bodyType - Body type used to infer Content-Type when absent.
+   * @param options - When `preserveMultipartContentType` is true, keep a user Content-Type
+   *   for multipart (used with raw body overrides that own the boundary).
    * @returns Header map ready for fetch, or an error when a field is invalid.
    */
-  build(headers: KeyValue[], bodyType: BodyType): BuildHeadersResult {
+  build(
+    headers: KeyValue[],
+    bodyType: BodyType,
+    options?: { preserveMultipartContentType?: boolean }
+  ): BuildHeadersResult {
     const result: Record<string, string> = {};
+    const preserveMultipartContentType = options?.preserveMultipartContentType === true;
 
     for (const header of headers) {
       if (header.enabled && header.key.trim()) {
         const key = header.key.trim();
-        if (bodyType === 'multipart' && key.toLowerCase() === 'content-type') {
+        if (
+          bodyType === 'multipart' &&
+          key.toLowerCase() === 'content-type' &&
+          !preserveMultipartContentType
+        ) {
           continue;
         }
         const validationError = validateHeaderField(key, header.value);

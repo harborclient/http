@@ -57,6 +57,29 @@ describe('Headers', () => {
       expect(result).toEqual({ ok: true, headers: { Authorization: 'Bearer token' } });
     });
 
+    it('preserves content-type for multipart when preserveMultipartContentType is set', () => {
+      const result = headersBuilder.build(
+        [
+          {
+            key: 'Content-Type',
+            value: 'multipart/form-data; boundary=abc',
+            enabled: true
+          },
+          { key: 'Authorization', value: 'Bearer token', enabled: true }
+        ],
+        'multipart',
+        { preserveMultipartContentType: true }
+      );
+
+      expect(result).toEqual({
+        ok: true,
+        headers: {
+          'Content-Type': 'multipart/form-data; boundary=abc',
+          Authorization: 'Bearer token'
+        }
+      });
+    });
+
     it('does not auto-add Content-Type for multipart body', () => {
       expect(headersBuilder.build([], 'multipart')).toEqual({ ok: true, headers: {} });
     });

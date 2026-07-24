@@ -312,9 +312,20 @@ export class Requester implements IRequester {
     input: SendRequestInput,
     bodyType: BodyType,
     shouldSendBody: boolean
-  ): Promise<{ body?: BodyInit; error?: string }> {
+  ): Promise<{ body?: BodyInit; contentType?: string; error?: string }> {
     if (!shouldSendBody || bodyType === 'none') {
       return {};
+    }
+
+    if (input.bodyRaw !== undefined) {
+      if (bodyType === 'multipart') {
+        const expanded = await this.body.expandMultipartRaw(input.bodyRaw);
+        if ('error' in expanded) {
+          return { error: expanded.error };
+        }
+        return { body: expanded.body as BodyInit, contentType: expanded.contentType };
+      }
+      return { body: input.bodyRaw };
     }
 
     if (bodyType === 'multipart') {
@@ -374,7 +385,9 @@ export class Requester implements IRequester {
       bodyType: input.bodyType
     };
 
-    const builtHeaders = this.headers.build(input.headers, input.bodyType);
+    const builtHeaders = this.headers.build(input.headers, input.bodyType, {
+      preserveMultipartContentType: input.bodyRaw !== undefined
+    });
     if (!builtHeaders.ok) {
       return this.errorResult(builtHeaders.error, sentRequest, 0);
     }
@@ -389,11 +402,13 @@ export class Requester implements IRequester {
     const shouldSendBody =
       input.bodyType !== 'none' && input.method !== 'GET' && input.method !== 'HEAD';
     const sentBody = shouldSendBody
-      ? input.bodyType === 'multipart'
-        ? this.body.summarizeFormParts(input.body)
-        : input.bodyType === 'urlencoded'
-          ? this.body.buildUrlEncoded(input.body)
-          : input.body
+      ? input.bodyRaw !== undefined
+        ? input.bodyRaw
+        : input.bodyType === 'multipart'
+          ? this.body.summarizeFormParts(input.body)
+          : input.bodyType === 'urlencoded'
+            ? this.body.buildUrlEncoded(input.body)
+            : input.body
       : '';
     sentRequest.body = sentBody;
 
@@ -449,6 +464,15 @@ export class Requester implements IRequester {
             timeMs,
             lastTimingSession?.toPhases(timeMs)
           );
+        }
+        if (bodyResult.contentType) {
+          for (const key of Object.keys(currentHeaders)) {
+            if (key.toLowerCase() === 'content-type') {
+              delete currentHeaders[key];
+            }
+          }
+          currentHeaders['Content-Type'] = bodyResult.contentType;
+          sentRequest.headers = { ...currentHeaders };
         }
         if (bodyResult.body !== undefined) {
           init.body = bodyResult.body;

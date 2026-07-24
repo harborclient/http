@@ -5,7 +5,7 @@ export {
 } from './settings.js';
 export type { RequestSettings } from './settings.js';
 export type { ApplyCookieResult, BuildHeadersResult } from './IHeaders.js';
-export type { BuildMultipartResult } from './IBody.js';
+export type { BuildMultipartResult, ExpandMultipartRawResult } from './IBody.js';
 export type { ReadResponseBodyResult } from './IResponseReader.js';
 export type { IBody } from './IBody.js';
 export type { IHeaders } from './IHeaders.js';
