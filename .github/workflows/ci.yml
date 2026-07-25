@@ -1,31 +1,16 @@
 name: CI
 
-on:
-  push:
-  pull_request:
-  workflow_dispatch:
-  workflow_call:
+# This repository is archived. CI is disabled; development continues in
+# https://github.com/harborclient/harborclient (packages/http).
 
-permissions:
-  contents: read
+on:
+  workflow_dispatch:
 
 jobs:
-  check:
+  noop:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm format:check
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
+      - name: Repository archived
+        run: |
+          echo "http development moved to harborclient/harborclient packages/http."
+          echo "See https://github.com/harborclient/harborclient"

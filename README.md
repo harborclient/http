@@ -1,33 +1,31 @@
 # @harborclient/http
 
-**Full documentation:** [https://harborclient.github.io/http/](https://harborclient.github.io/http/)
+> **This repository is archived.** The package now lives in the
+> [`harborclient/harborclient`](https://github.com/harborclient/harborclient)
+> monorepo at [`packages/http`](https://github.com/harborclient/harborclient/tree/main/packages/http).
 
-**Outbound HTTP utilities for HarborClient.**
+Outbound HTTP utilities for [HarborClient](https://harborclient.com/): URL and
+header validation, request body encoding, fetch execution (with an optional
+undici dispatcher for SSL and proxy settings), response size limits, and
+redirect following.
 
-@harborclient/http is a library for URL and header validation, request body encoding, fetch execution (with optional undici dispatcher for SSL and proxy settings), response size limits, and redirect following:
+## Where to go
 
-- **Request execution:** `Requester` with configurable timeouts, SSL verification, proxy support, and redirect following.
-- **Validation and encoding:** URL/header validation and request body encoding via `QueryString` and related helpers.
-- **Safety limits:** Built-in response size caps via `HARD_MAX_RESPONSE_SIZE_MB`.
+| Resource | URL |
+| --- | --- |
+| Source | https://github.com/harborclient/harborclient/tree/main/packages/http |
+| Docs | https://harborclient.github.io/harborclient/http/ |
+| npm | https://www.npmjs.com/package/@harborclient/http |
+| Releases | `pnpm release:http` from the monorepo (`http-v*` tags) |
 
-## Documentation
-
-| Topic           | Link                                                             |
-| --------------- | ---------------------------------------------------------------- |
-| Getting started | [Introduction](https://harborclient.github.io/http/)             |
-| Installation    | [Installation](https://harborclient.github.io/http/installation) |
-| Usage           | [Usage](https://harborclient.github.io/http/usage)               |
-
-Canonical docs live in [`docs/`](./docs/). Edit those pages directly, then run `pnpm docs:build:nav` to refresh the VitePress sidebar.
-
-## Development
+Install continues to work the same way:
 
 ```bash
-pnpm install
-pnpm test
-pnpm docs:serve    # VitePress dev server with nav watcher
-pnpm docs:build    # production docs build
+pnpm add @harborclient/http
 ```
+
+Old documentation URLs under `https://harborclient.github.io/http/` redirect to
+the monorepo docs site.
 
 ## License
 
